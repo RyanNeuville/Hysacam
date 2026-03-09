@@ -1,3 +1,5 @@
+import Image from "next/image"
+
 export default function AuthLayout({
   children,
 }: {
@@ -8,8 +10,10 @@ export default function AuthLayout({
       <div className="w-full max-w-md">
         <div className="bg-card rounded-lg shadow-lg p-8 border border-border">
           <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold text-primary mb-2">Hysacam</h1>
-            <p className="text-muted-foreground text-sm">Hysacam Admin Dashboard</p>
+            <h1 className="text-3xl font-bold text-primary mb-2 flex items-center justify-center">
+              <Image src="/apple-icon.png" alt="Hysacam" width={175} height={100} />
+            </h1>
+            <p className="text-muted-foreground text-sm">Tableau de bord Administrateur de Hysacam</p>
           </div>
           {children}
         </div>

@@ -64,7 +64,7 @@ export default function Page() {
           {error}
         </div>
       )}
-      <Button type="submit" className="w-full" disabled={isLoading} size="lg">
+      <Button type="submit" className="w-full bg-green-500 cursor-pointer hover:bg-green-600 disabled:bg-green-400 disabled:cursor-not-allowed" disabled={isLoading} size="lg">
         {isLoading ? 'Connexion en cours...' : 'Se connecter'}
       </Button>
       <p className="text-center text-sm text-muted-foreground">
