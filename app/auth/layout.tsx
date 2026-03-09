@@ -8,13 +8,13 @@ export default function AuthLayout({
       <div className="w-full max-w-md">
         <div className="bg-card rounded-lg shadow-lg p-8 border border-border">
           <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold text-primary mb-2">CityReport</h1>
+            <h1 className="text-3xl font-bold text-primary mb-2">Hysacam</h1>
             <p className="text-muted-foreground text-sm">Hysacam Admin Dashboard</p>
           </div>
           {children}
         </div>
         <p className="text-center text-xs text-muted-foreground mt-6">
-          Incident and report management system for Douala, Cameroon
+          Système de gestion des incidents et des rapports pour Douala, Cameroun
         </p>
       </div>
     </div>

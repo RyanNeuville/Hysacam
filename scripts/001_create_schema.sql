@@ -1,4 +1,4 @@
--- Create users table
+-- Creation de la table users
 CREATE TABLE IF NOT EXISTS public.users (
   id UUID PRIMARY KEY DEFAULT auth.uid(),
   name TEXT NOT NULL,
@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS public.users (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
--- Create reports table
+-- Creation de la table reports
 CREATE TABLE IF NOT EXISTS public.reports (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS public.reports (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
--- Create comments table
+-- Creation de la table comments
 CREATE TABLE IF NOT EXISTS public.comments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   content TEXT NOT NULL,
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS public.comments (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
--- Create notifications table
+-- Creation de la table notifications
 CREATE TABLE IF NOT EXISTS public.notifications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
@@ -44,13 +44,13 @@ CREATE TABLE IF NOT EXISTS public.notifications (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
--- Enable Row Level Security
+-- Activation de Row Level Security
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies for users table
+-- Creation des policies pour la table users
 CREATE POLICY "Allow users to view own profile" ON public.users
   FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "Allow public to view admin users" ON public.users
@@ -58,7 +58,7 @@ CREATE POLICY "Allow public to view admin users" ON public.users
 CREATE POLICY "Allow admins to update any user" ON public.users
   FOR UPDATE USING ((SELECT auth.jwt() ->> 'role' = 'authenticated') AND (SELECT role FROM public.users WHERE id = auth.uid()) = 'admin');
 
--- RLS Policies for reports table
+-- Creation des policies pour la table reports
 CREATE POLICY "Allow users to view reports" ON public.reports
   FOR SELECT USING (true);
 CREATE POLICY "Allow users to create reports" ON public.reports
@@ -70,7 +70,7 @@ CREATE POLICY "Allow admins to update any report" ON public.reports
 CREATE POLICY "Allow admins to delete any report" ON public.reports
   FOR DELETE USING ((SELECT role FROM public.users WHERE id = auth.uid()) = 'admin');
 
--- RLS Policies for comments table
+-- Creation des policies pour la table comments
 CREATE POLICY "Allow users to view comments" ON public.comments
   FOR SELECT USING (true);
 CREATE POLICY "Allow authenticated users to create comments" ON public.comments
@@ -78,7 +78,7 @@ CREATE POLICY "Allow authenticated users to create comments" ON public.comments
 CREATE POLICY "Allow users to delete own comments" ON public.comments
   FOR DELETE USING (auth.uid() = user_id);
 
--- RLS Policies for notifications table
+-- Creation des policies pour la table notifications
 CREATE POLICY "Allow users to view own notifications" ON public.notifications
   FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Allow users to update own notifications" ON public.notifications
@@ -86,7 +86,7 @@ CREATE POLICY "Allow users to update own notifications" ON public.notifications
 CREATE POLICY "Allow users to delete own notifications" ON public.notifications
   FOR DELETE USING (auth.uid() = user_id);
 
--- Create indexes for performance
+-- Creation des indexes pour performance
 CREATE INDEX IF NOT EXISTS idx_reports_user_id ON public.reports(user_id);
 CREATE INDEX IF NOT EXISTS idx_reports_status ON public.reports(status);
 CREATE INDEX IF NOT EXISTS idx_reports_created_at ON public.reports(created_at DESC);

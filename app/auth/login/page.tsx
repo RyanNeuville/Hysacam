@@ -37,7 +37,7 @@ export default function Page() {
   return (
     <form onSubmit={handleLogin} className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="email">Email Address</Label>
+        <Label htmlFor="email">Email</Label>
         <Input
           id="email"
           type="email"
@@ -49,7 +49,7 @@ export default function Page() {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password">Mot de passe</Label>
         <Input
           id="password"
           type="password"
@@ -65,7 +65,7 @@ export default function Page() {
         </div>
       )}
       <Button type="submit" className="w-full" disabled={isLoading} size="lg">
-        {isLoading ? 'Signing in...' : 'Sign In'}
+        {isLoading ? 'Connexion en cours...' : 'Se connecter'}
       </Button>
       <p className="text-center text-sm text-muted-foreground">
         Demo credentials: admin@example.com / password
