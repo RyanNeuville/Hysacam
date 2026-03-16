@@ -17,6 +17,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import Image from 'next/image'
 
 export function DashboardSidebar() {
   const pathname = usePathname()
@@ -29,30 +30,31 @@ export function DashboardSidebar() {
     router.push('/auth/login')
   }
 
+  /** version francaise */
   const navItems = [
     {
       href: '/dashboard',
-      label: 'Overview',
+      label: 'Aperçu',
       icon: BarChart3,
     },
     {
       href: '/dashboard/reports',
-      label: 'Reports',
+      label: 'Rapports',
       icon: FileText,
     },
     {
       href: '/dashboard/map',
-      label: 'Map View',
+      label: 'Carte',
       icon: Map,
     },
     {
       href: '/dashboard/users',
-      label: 'Users',
+      label: 'Utilisateurs',
       icon: Users,
     },
     {
       href: '/dashboard/statistics',
-      label: 'Statistics',
+      label: 'Statistiques',
       icon: BarChart3,
     },
     {
@@ -62,7 +64,7 @@ export function DashboardSidebar() {
     },
     {
       href: '/dashboard/settings',
-      label: 'Settings',
+      label: 'Paramètres',
       icon: Settings,
     },
   ]
@@ -90,24 +92,22 @@ export function DashboardSidebar() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:relative left-0 top-0 h-screen w-64 bg-sidebar text-sidebar-foreground border-r border-sidebar-border z-40 transition-transform duration-300 ${
+        className={`fixed lg:relative left-0 top-0 h-screen w-64 text-sidebar-foreground border-r  z-40 transition-transform duration-300 ${
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-6 border-b border-sidebar-border">
+          <div className="p-6 border-b  bg-yellow-400">
             <h1 className="text-xl font-bold flex items-center gap-2">
-              <div className="w-8 h-8 bg-sidebar-primary rounded-lg flex items-center justify-center text-sidebar-primary-foreground font-bold">
-                C
-              </div>
-              CityReport
+              <Image src="/apple-icon.png" alt="Hysacam" width={175} height={100} />
             </h1>
-            <p className="text-xs text-sidebar-accent mt-1">Hysacam Admin</p>
+            {/* version francaise */}
+            <p className="text-sm mt-1 text-white">Administrateur Hysacam</p>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-2">
+          <nav className="flex-1 p-4 space-y-2 bg-yellow-400">
             {navItems.map(({ href, label, icon: Icon }) => {
               const active = isActive(href)
               return (
@@ -129,7 +129,7 @@ export function DashboardSidebar() {
           </nav>
 
           {/* Logout */}
-          <div className="p-4 border-t border-sidebar-border">
+          <div className="p-4 border-sidebar-border bg-yellow-400">
             <Button
               variant="destructive"
               className="w-full flex items-center gap-2 justify-center"
