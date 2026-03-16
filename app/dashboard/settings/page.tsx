@@ -1,40 +1,48 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
-import { Bell, Lock, Shield, Database } from 'lucide-react'
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Bell, Lock, Shield, Database } from "lucide-react";
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState({
     emailNotifications: true,
     pushNotifications: false,
-    dataRetention: '90',
-  })
-  const [loading, setLoading] = useState(false)
-  const [saved, setSaved] = useState(false)
+    dataRetention: "90",
+  });
+  const [loading, setLoading] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   const handleSave = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       // Simulate saving settings
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      setSaved(true)
-      setTimeout(() => setSaved(false), 3000)
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
-        <p className="text-muted-foreground">Manage your account and system preferences</p>
+        <h1 className="text-3xl font-bold text-foreground mb-2">Parametres</h1>
+        <p className="text-muted-foreground">
+          Gérer votre compte et les préférences du système
+        </p>
       </div>
 
       {/* Notifications Settings */}
@@ -44,16 +52,21 @@ export default function SettingsPage() {
             <Bell className="w-5 h-5 text-primary" />
             <div>
               <CardTitle>Notifications</CardTitle>
-              <CardDescription>Control how you receive notifications</CardDescription>
+              <CardDescription>
+                Gérer comment vous recevez les notifications
+              </CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <Label className="text-base font-medium">Email Notifications</Label>
+              <Label className="text-base font-medium">
+                Notifications par email
+              </Label>
               <p className="text-sm text-muted-foreground mt-1">
-                Receive email alerts for new reports and updates
+                Recevez des alertes par email pour les nouveaux rapports et
+                mises à jour
               </p>
             </div>
             <Switch
@@ -66,9 +79,11 @@ export default function SettingsPage() {
           <div className="border-t border-border pt-4">
             <div className="flex items-center justify-between">
               <div>
-                <Label className="text-base font-medium">Push Notifications</Label>
+                <Label className="text-base font-medium">
+                  Notifications Push
+                </Label>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Receive browser notifications for urgent alerts
+                  Recevez des notifications push pour les alertes urgentes
                 </p>
               </div>
               <Switch
@@ -88,18 +103,18 @@ export default function SettingsPage() {
           <div className="flex items-center gap-2">
             <Shield className="w-5 h-5 text-primary" />
             <div>
-              <CardTitle>Security</CardTitle>
-              <CardDescription>Protect your account</CardDescription>
+              <CardTitle>Sécurité</CardTitle>
+              <CardDescription>Protéger votre compte</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <Button variant="outline" className="w-full">
             <Lock className="w-4 h-4 mr-2" />
-            Change Password
+            Changer le mot de passe
           </Button>
           <Button variant="outline" className="w-full">
-            Enable Two-Factor Authentication
+            Activer l'authentification à deux facteurs
           </Button>
         </CardContent>
       </Card>
@@ -110,18 +125,19 @@ export default function SettingsPage() {
           <div className="flex items-center gap-2">
             <Database className="w-5 h-5 text-primary" />
             <div>
-              <CardTitle>Data Management</CardTitle>
-              <CardDescription>Control your data</CardDescription>
+              <CardTitle>Gestion des données</CardTitle>
+              <CardDescription>Gérer vos données</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
             <Label htmlFor="retention" className="text-base font-medium">
-              Data Retention Period (days)
+              Période de rétention des données (jours)
             </Label>
             <p className="text-sm text-muted-foreground mt-1 mb-3">
-              Automatically delete old records after this period
+              Supprimer automatiquement les anciens enregistrements après cette
+              période
             </p>
             <Input
               id="retention"
@@ -134,18 +150,24 @@ export default function SettingsPage() {
             />
           </div>
           <Button variant="outline" className="w-full">
-            Export My Data
+            Exporter mes données
           </Button>
         </CardContent>
       </Card>
 
       {/* Save Button */}
       <div className="flex gap-2">
-        <Button onClick={handleSave} disabled={loading} className="px-8">
-          {loading ? 'Saving...' : 'Save Changes'}
+        <Button
+          onClick={handleSave}
+          disabled={loading}
+          className="px-8 bg-green-600"
+        >
+          {loading ? "Saving..." : "Save Changes"}
         </Button>
-        {saved && <div className="text-green-600 flex items-center gap-2">✓ Saved</div>}
+        {saved && (
+          <div className="text-green-600 flex items-center gap-2">✓ Saved</div>
+        )}
       </div>
     </div>
-  )
+  );
 }
