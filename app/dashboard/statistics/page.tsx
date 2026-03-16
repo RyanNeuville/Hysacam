@@ -4,9 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 
 const statusData = [
-  { name: 'Pending', value: 24, fill: 'var(--color-chart-1)' },
-  { name: 'In Progress', value: 35, fill: 'var(--color-chart-2)' },
-  { name: 'Resolved', value: 41, fill: 'var(--color-chart-3)' },
+  { name: 'Pending', value: 24, fill: '#8884d8' },
+  { name: 'In Progress', value: 35, fill: '#82ca9d' },
+  { name: 'Resolved', value: 41, fill: '#ffc658' },
 ]
 
 const categoryData = [
@@ -36,7 +36,7 @@ export default function StatisticsPage() {
       </div>
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6">
         {/* Status Distribution */}
         <Card className="border border-border">
           <CardHeader>
@@ -67,7 +67,7 @@ export default function StatisticsPage() {
         </Card>
 
         {/* Category Distribution */}
-        <Card className="border border-border">
+        {/* <Card className="border border-border">
           <CardHeader>
             <CardTitle>Reports by Category</CardTitle>
             <CardDescription>Breakdown by issue type</CardDescription>
@@ -92,7 +92,7 @@ export default function StatisticsPage() {
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
 
       {/* Weekly Trend */}

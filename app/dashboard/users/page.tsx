@@ -92,13 +92,14 @@ export default function UsersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">Users</h1>
-        <p className="text-muted-foreground">Manage admin and citizen accounts</p>
+        <h1 className="text-3xl font-bold text-foreground mb-2">Utilisateurs</h1>
+        {/* version francaise */}
+        <p className="text-muted-foreground">Gérer les comptes admin et citoyen</p>
       </div>
 
       {/* Search */}
       <Input
-        placeholder="Search by email..."
+        placeholder="Rechercher par email..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         className="max-w-sm"
@@ -107,16 +108,16 @@ export default function UsersPage() {
       {/* Users Table */}
       <Card className="border border-border">
         <CardHeader>
-          <CardTitle>User Accounts</CardTitle>
+          <CardTitle>Comptes utilisateurs</CardTitle>
           <CardDescription>
-            {loading ? 'Loading...' : `${filteredUsers.length} user${filteredUsers.length !== 1 ? 's' : ''}`}
+            {loading ? 'Chargement...' : `${filteredUsers.length} utilisateur${filteredUsers.length !== 1 ? 's' : ''}`}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="text-center py-8 text-muted-foreground">Loading users...</div>
+            <div className="text-center py-8 text-muted-foreground">Chargement des utilisateurs...</div>
           ) : filteredUsers.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">No users found</div>
+            <div className="text-center py-8 text-muted-foreground">Aucun utilisateur trouvé</div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
