@@ -1,4 +1,4 @@
--- Create or replace function to handle new user creation
+-- Creation de la fonction pour gérer la creation d'un nouvel utilisateur
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -15,10 +15,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
--- Drop existing trigger if it exists
+-- Suppression du trigger si il existe
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 
--- Create trigger to automatically create user record
+-- Creation du trigger pour automatiquement creer un enregistrement utilisateur
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
