@@ -4,18 +4,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 
 const statusData = [
-  { name: 'Pending', value: 24, fill: '#8884d8' },
-  { name: 'In Progress', value: 35, fill: '#82ca9d' },
-  { name: 'Resolved', value: 41, fill: '#ffc658' },
+  { name: 'En attente', value: 24, fill: '#8884d8' },
+  { name: 'En cours', value: 35, fill: '#82ca9d' },
+  { name: 'Résolu', value: 41, fill: '#ffc658' },
 ]
 
-const categoryData = [
-  { category: 'Roads', count: 45 },
-  { category: 'Water', count: 38 },
-  { category: 'Electricity', count: 52 },
-  { category: 'Waste', count: 29 },
-  { category: 'Traffic', count: 41 },
-]
+// const categoryData = [
+//   { category: 'Roads', count: 45 },
+//   { category: 'Water', count: 38 },
+//   { category: 'Electricity', count: 52 },
+//   { category: 'Waste', count: 29 },
+//   { category: 'Traffic', count: 41 },
+// ]
 
 const weeklyData = [
   { day: 'Mon', reports: 12 },
@@ -31,8 +31,8 @@ export default function StatisticsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">Statistics</h1>
-        <p className="text-muted-foreground">Detailed analytics and insights on reports</p>
+        <h1 className="text-3xl font-bold text-foreground mb-2">Statistiques</h1>
+        <p className="text-muted-foreground">Statistiques détaillées et aperçus des signalements</p>
       </div>
 
       {/* Charts Grid */}
@@ -40,8 +40,8 @@ export default function StatisticsPage() {
         {/* Status Distribution */}
         <Card className="border border-border">
           <CardHeader>
-            <CardTitle>Reports by Status</CardTitle>
-            <CardDescription>Distribution of all reports</CardDescription>
+            <CardTitle>Statistiques des signalements</CardTitle>
+            <CardDescription>Distribution de tous les signalements</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -98,8 +98,8 @@ export default function StatisticsPage() {
       {/* Weekly Trend */}
       <Card className="border border-border">
         <CardHeader>
-          <CardTitle>Weekly Reports Trend</CardTitle>
-          <CardDescription>Reports submitted this week</CardDescription>
+          <CardTitle>Tendance des signalements</CardTitle>
+          <CardDescription>Signalements soumis cette semaine</CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
