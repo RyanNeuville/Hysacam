@@ -26,10 +26,12 @@ export default function DashboardPage() {
   const [stats, setStats] = useState({
     totalReports: 0,
     pendingReports: 0,
+    inProgressReports: 0,
     resolvedReports: 0,
     activeUsers: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [chartData, setChartData] = useState<{ month: string; reports: number; resolved: number }[]>([]);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -57,9 +59,32 @@ export default function DashboardPage() {
           .select("*", { count: "exact", head: true })
           .eq("role", "admin");
 
+        const { count: inProgressReports } = await supabase
+          .from("reports")
+          .select("*", { count: "exact", head: true })
+          .eq("statut", "En cours");
+
+        // Compute per-month chart data from real reports
+        const { data: allReports } = await supabase
+          .from("reports")
+          .select("created_at, statut");
+
+        const monthNames = ["Jan", "Fév", "Mar", "Avr", "Mai", "Jun", "Jul", "Aoû", "Sep", "Oct", "Nov", "Déc"];
+        const monthMap: Record<string, { reports: number; resolved: number }> = {};
+        (allReports || []).forEach((r: any) => {
+          const d = new Date(r.created_at);
+          const key = monthNames[d.getMonth()];
+          if (!monthMap[key]) monthMap[key] = { reports: 0, resolved: 0 };
+          monthMap[key].reports++;
+          if (r.statut === "Résolu") monthMap[key].resolved++;
+        });
+        const dynamicChartData = Object.entries(monthMap).map(([month, v]) => ({ month, ...v }));
+        setChartData(dynamicChartData);
+
         setStats({
           totalReports: totalReports || 0,
           pendingReports: pendingReports || 0,
+          inProgressReports: inProgressReports || 0,
           resolvedReports: resolvedReports || 0,
           activeUsers: activeUsers || 0,
         });
@@ -71,16 +96,16 @@ export default function DashboardPage() {
     };
 
     fetchStats();
+
+    const supabase = createClient();
+    const subscription = supabase
+      .channel("dashboard_reports")
+      .on("postgres_changes", { event: "*", schema: "public", table: "reports" }, () => fetchStats())
+      .subscribe();
+
+    return () => { subscription.unsubscribe(); };
   }, []);
 
-  const chartData = [
-    { month: "Jan", reports: 65, resolved: 45 },
-    { month: "Feb", reports: 78, resolved: 52 },
-    { month: "Mar", reports: 92, resolved: 68 },
-    { month: "Apr", reports: 88, resolved: 71 },
-    { month: "May", reports: 105, resolved: 85 },
-    { month: "Jun", reports: 120, resolved: 98 },
-  ];
 
   /** version francaise */
   const statCards = [
@@ -99,18 +124,18 @@ export default function DashboardPage() {
       bgColor: "bg-yellow-500/10",
     },
     {
+      title: "En cours",
+      value: stats.inProgressReports,
+      icon: TrendingUp,
+      color: "text-blue-500",
+      bgColor: "bg-blue-500/10",
+    },
+    {
       title: "Résolus",
       value: stats.resolvedReports,
       icon: CheckCircle2,
       color: "text-green-500",
       bgColor: "bg-green-500/10",
-    },
-    {
-      title: "Utilisateurs actifs",
-      value: stats.activeUsers,
-      icon: TrendingUp,
-      color: "text-secondary",
-      bgColor: "bg-secondary/10",
     },
   ];
 
