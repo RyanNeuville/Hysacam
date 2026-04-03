@@ -44,12 +44,12 @@ export default function DashboardPage() {
         const { count: pendingReports } = await supabase
           .from("reports")
           .select("*", { count: "exact", head: true })
-          .eq("status", "pending");
+          .eq("statut", "En attente");
 
         const { count: resolvedReports } = await supabase
           .from("reports")
           .select("*", { count: "exact", head: true })
-          .eq("status", "resolved");
+          .eq("statut", "Résolu");
 
         // Fetch active users
         const { count: activeUsers } = await supabase

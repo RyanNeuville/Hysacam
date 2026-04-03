@@ -17,11 +17,12 @@ const defaultIcon = L.icon({
 
 interface Report {
   id: string
-  title: string
-  location: string
-  latitude?: number
-  longitude?: number
-  status: string
+  title: string | null
+  description: string
+  typeInsalubrite: string
+  latitude: number
+  longitude: number
+  statut: "En attente" | "En cours" | "Résolu"
 }
 
 export default function MapComponent({ reports }: { reports: Report[] }) {
@@ -29,17 +30,10 @@ export default function MapComponent({ reports }: { reports: Report[] }) {
   const doualaLat = 4.0511
   const doualaLng = 9.7679
 
-  // Mock coordinates for reports (in production, these would come from the database)
-  const reportsWithCoords = reports.map((report) => ({
-    ...report,
-    latitude: report.latitude || doualaLat + (Math.random() - 0.5) * 0.1,
-    longitude: report.longitude || doualaLng + (Math.random() - 0.5) * 0.1,
-  }))
-
   const statusColor = {
-    pending: '#FFA500',
-    in_progress: '#3B82F6',
-    resolved: '#10B981',
+    "En attente": '#FFA500',
+    "En cours": '#3B82F6',
+    "Résolu": '#10B981',
   }
 
   return (
@@ -52,24 +46,27 @@ export default function MapComponent({ reports }: { reports: Report[] }) {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       />
-      {reportsWithCoords.map((report) => (
+      {reports.filter(r => r.latitude && r.longitude).map((report) => (
         <Marker
           key={report.id}
-          position={[report.latitude || doualaLat, report.longitude || doualaLng]}
+          position={[report.latitude, report.longitude]}
           icon={defaultIcon}
         >
           <Popup>
             <div className="space-y-2 text-sm">
-              <h3 className="font-semibold">{report.title}</h3>
-              <p className="text-gray-600">{report.location}</p>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium">Status:</span>
+              <h3 className="font-semibold px-1">{(report.title || report.typeInsalubrite).toUpperCase()}</h3>
+              <p className="text-gray-600 px-1 line-clamp-1">{report.description}</p>
+              <div className="flex items-center gap-2 pt-1 border-t border-gray-100">
+                <span className="text-[10px] font-medium text-gray-400">STATUS:</span>
                 <span
-                  className="px-2 py-1 rounded text-white text-xs font-semibold"
-                  style={{ backgroundColor: statusColor[report.status as keyof typeof statusColor] || '#6B7280' }}
+                  className="px-2 py-1 rounded text-white text-[10px] font-bold"
+                  style={{ backgroundColor: statusColor[report.statut] || '#6B7280' }}
                 >
-                  {report.status.replace('_', ' ').toUpperCase()}
+                  {report.statut.toUpperCase()}
                 </span>
+                <a href={`/dashboard/reports/${report.id}`} className="ml-auto text-[10px] text-blue-600 font-bold hover:underline">
+                  DÉTAILS
+                </a>
               </div>
             </div>
           </Popup>

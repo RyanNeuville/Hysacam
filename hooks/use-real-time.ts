@@ -31,13 +31,13 @@ export function useRealTime<T = any>(
             table: table,
             filter: options?.filter,
           },
-          (payload) => {
+          (payload: any) => {
             if (payload.eventType === 'INSERT' && options?.onInsert) {
-              options.onInsert(payload.new)
+              options.onInsert(payload.new as T)
             } else if (payload.eventType === 'UPDATE' && options?.onUpdate) {
-              options.onUpdate(payload.new)
+              options.onUpdate(payload.new as T)
             } else if (payload.eventType === 'DELETE' && options?.onDelete) {
-              options.onDelete(payload.old)
+              options.onDelete(payload.old as T)
             }
           }
         )

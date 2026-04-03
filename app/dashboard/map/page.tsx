@@ -17,11 +17,12 @@ const MapComponent = dynamic(() => import("@/components/map-component"), {
 
 interface Report {
   id: string;
-  title: string;
-  location: string;
-  latitude?: number;
-  longitude?: number;
-  status: string;
+  title: string | null;
+  description: string;
+  typeInsalubrite: string;
+  latitude: number;
+  longitude: number;
+  statut: "En attente" | "En cours" | "Résolu";
 }
 
 export default function MapPage() {

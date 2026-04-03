@@ -35,22 +35,27 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+import { useRouter } from "next/navigation";
+
 interface Report {
   id: string;
-  title: string;
+  title: string | null;
   description: string;
-  location: string;
-  status: "pending" | "in_progress" | "resolved";
+  typeInsalubrite: string;
+  statut: "En attente" | "En cours" | "Résolu";
   created_at: string;
   user_id: string;
-  image_url?: string;
+  imageUrl: string;
+  latitude: number;
+  longitude: number;
 }
 
 export default function ReportsPage() {
+  const router = useRouter();
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<
-    "all" | "pending" | "in_progress" | "resolved"
+    "all" | "En attente" | "En cours" | "Résolu"
   >("all");
   const [search, setSearch] = useState("");
 
@@ -64,7 +69,7 @@ export default function ReportsPage() {
           .order("created_at", { ascending: false });
 
         if (filter !== "all") {
-          query = query.eq("status", filter);
+          query = query.eq("statut", filter);
         }
 
         const { data, error } = await query;
@@ -100,16 +105,16 @@ export default function ReportsPage() {
 
   const filteredReports = reports.filter(
     (report) =>
-      report.title.toLowerCase().includes(search.toLowerCase()) ||
+      (report.title || report.typeInsalubrite).toLowerCase().includes(search.toLowerCase()) ||
       report.description.toLowerCase().includes(search.toLowerCase()),
   );
 
   const statusColor = {
-    pending:
+    "En attente":
       "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
-    in_progress:
+    "En cours":
       "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-    resolved:
+    "Résolu":
       "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
   };
 
@@ -118,7 +123,7 @@ export default function ReportsPage() {
       const supabase = createClient();
       const { error } = await supabase
         .from("reports")
-        .update({ status: newStatus })
+        .update({ statut: newStatus })
         .eq("id", reportId);
 
       if (error) throw error;
@@ -126,7 +131,7 @@ export default function ReportsPage() {
       // Update local state
       setReports(
         reports.map((r) =>
-          r.id === reportId ? { ...r, status: newStatus as any } : r,
+          r.id === reportId ? { ...r, statut: newStatus as any } : r,
         ),
       );
     } catch (error) {
@@ -157,9 +162,9 @@ export default function ReportsPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tous les Status</SelectItem>
-            <SelectItem value="pending">En attente</SelectItem>
-            <SelectItem value="in_progress">En cours</SelectItem>
-            <SelectItem value="resolved">Résolu</SelectItem>
+            <SelectItem value="En attente">En attente</SelectItem>
+            <SelectItem value="En cours">En cours</SelectItem>
+            <SelectItem value="Résolu">Résolu</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -188,7 +193,7 @@ export default function ReportsPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="border-border">
-                    <TableHead>Titre</TableHead>
+                    <TableHead>Titre / Type</TableHead>
                     <TableHead>Lieu</TableHead>
                     <TableHead>Statut</TableHead>
                     <TableHead>Date</TableHead>
@@ -197,38 +202,43 @@ export default function ReportsPage() {
                 </TableHeader>
                 <TableBody>
                   {filteredReports.map((report) => (
-                    <TableRow key={report.id} className="border-border">
+                    <TableRow key={report.id} className="border-border cursor-pointer hover:bg-muted/50" onClick={() => router.push(`/dashboard/reports/${report.id}`)}>
                       <TableCell>
-                        <div>
-                          <p className="font-medium text-foreground">
-                            {report.title}
-                          </p>
-                          <p className="text-sm text-muted-foreground line-clamp-1">
-                            {report.description}
-                          </p>
+                        <div className="flex items-center gap-3">
+                          {report.imageUrl ? (
+                            <img src={report.imageUrl} alt="report" className="w-10 h-10 rounded object-cover" />
+                          ) : (
+                            <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
+                              <MapPin className="w-4 h-4 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-medium text-foreground">
+                              {(report.title || report.typeInsalubrite).toUpperCase()}
+                            </p>
+                            <p className="text-sm text-muted-foreground line-clamp-1 max-w-[250px]">
+                              {report.description}
+                            </p>
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <MapPin className="w-4 h-4" />
-                          {report.location}
+                          {report.latitude.toFixed(4)}, {report.longitude.toFixed(4)}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge className={statusColor[report.status]}>
-                          {report.status
-                            .replace("_", " ")
-                            .charAt(0)
-                            .toUpperCase() +
-                            report.status.replace("_", " ").slice(1)}
+                        <Badge className={statusColor[report.statut] || 'bg-gray-100 text-gray-800'}>
+                          {report.statut.toUpperCase()}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {new Date(report.created_at).toLocaleDateString()}
                       </TableCell>
-                      <TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
                         <Select
-                          value={report.status}
+                          value={report.statut}
                           onValueChange={(value) =>
                             updateReportStatus(report.id, value)
                           }
@@ -237,11 +247,9 @@ export default function ReportsPage() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="pending">En attente</SelectItem>
-                            <SelectItem value="in_progress">
-                              En cours
-                            </SelectItem>
-                            <SelectItem value="resolved">Résolu</SelectItem>
+                            <SelectItem value="En attente">En attente</SelectItem>
+                            <SelectItem value="En cours">En cours</SelectItem>
+                            <SelectItem value="Résolu">Résolu</SelectItem>
                           </SelectContent>
                         </Select>
                       </TableCell>
