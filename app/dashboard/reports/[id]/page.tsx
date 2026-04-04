@@ -86,8 +86,8 @@ export default function ReportDetailsPage() {
 
         if (commentsError) throw commentsError;
         setComments(commentsData || []);
-      } catch (error) {
-        console.error("Error fetching data:", error);
+      } catch (error: any) {
+        console.error("Error fetching data:", JSON.stringify(error, null, 2));
       } finally {
         setLoading(false);
       }
