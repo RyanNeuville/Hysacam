@@ -107,16 +107,16 @@ export function UserProfileModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-none shadow-2xl">
-        {/* Header with Background Gradient */}
-        <div className="bg-linear-to-br from-yellow-400 via-yellow-500 to-green-600 p-8 text-white">
+        {/* Simple Header with Solid Background */}
+        <div className="bg-yellow-400 p-8 text-slate-900">
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-20 h-20 rounded-3xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 shadow-inner">
-               <span className="text-3xl font-black">{userName[0]?.toUpperCase()}</span>
+            <div className="w-20 h-20 rounded-2xl bg-white flex items-center justify-center border-2 border-slate-900/10 shadow-sm">
+               <span className="text-3xl font-black text-yellow-600">{userName[0]?.toUpperCase()}</span>
             </div>
             <div>
-              <DialogTitle className="text-2xl font-black drop-shadow-sm">{userName}</DialogTitle>
-              <DialogDescription className="text-white/80 font-medium">{userEmail}</DialogDescription>
-              <Badge className={`mt-2 ${rank.color} border-none text-white font-bold shadow-sm`}>
+              <DialogTitle className="text-2xl font-black">{userName}</DialogTitle>
+              <DialogDescription className="text-slate-700 font-medium">{userEmail}</DialogDescription>
+              <Badge className={`mt-2 ${rank.color} border-none text-white font-bold`}>
                 {rank.label}
               </Badge>
             </div>
