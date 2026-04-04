@@ -296,9 +296,13 @@ export default function DashboardPage() {
               <p className="text-sm text-muted-foreground text-center py-4">Aucun signalement récent</p>
             ) : (
               recentReports.map((report) => (
-                <div key={report.id} className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                <Link 
+                  key={report.id} 
+                  href={`/dashboard/reports/${report.id}`} 
+                  className="flex items-center justify-between p-3 rounded-xl border bg-muted/30 hover:bg-muted/50 hover:border-primary/20 transition-all group"
+                >
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-full">
+                    <div className="p-2 bg-primary/10 rounded-full group-hover:bg-primary/20 transition-colors">
                       <AlertCircle className="w-4 h-4 text-primary" />
                     </div>
                     <div>
@@ -308,10 +312,13 @@ export default function DashboardPage() {
                       </p>
                     </div>
                   </div>
-                  <Badge variant={report.statut === 'Résolu' ? 'secondary' : 'outline'} className="text-[10px]">
-                    {report.statut.toUpperCase()}
-                  </Badge>
-                </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={report.statut === 'Résolu' ? 'secondary' : 'outline'} className="text-[10px]">
+                      {report.statut.toUpperCase()}
+                    </Badge>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                </Link>
               ))
             )}
           </CardContent>

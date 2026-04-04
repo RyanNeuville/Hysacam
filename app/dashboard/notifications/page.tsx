@@ -112,8 +112,21 @@ export default function NotificationsPage() {
     }
   };
 
-  const deleteNotification = (notificationId: string) => {
-    setNotifications(notifications.filter((n) => n.id !== notificationId));
+  const deleteNotification = async (notificationId: string) => {
+    if (!confirm("Supprimer définitivement cette notification ?")) return;
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("notifications")
+        .delete()
+        .eq("id", notificationId);
+
+      if (!error) {
+        setNotifications(notifications.filter((n) => n.id !== notificationId));
+      }
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+    }
   };
 
   const typeIcon = {
