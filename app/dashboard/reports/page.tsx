@@ -233,8 +233,8 @@ export default function ReportsPage() {
                           {report.statut.toUpperCase()}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {new Date(report.created_at).toLocaleDateString()}
+                      <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                        {new Date(report.created_at).toLocaleDateString('fr-FR')} à {new Date(report.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                       </TableCell>
                       <TableCell onClick={(e) => e.stopPropagation()}>
                         <Select

@@ -53,14 +53,14 @@ export default function DashboardPage() {
           .select("*", { count: "exact", head: true })
           .eq("statut", "Résolu");
 
-        // Fetch active users (Admin or Autorité)
+        // Fetch active users (Admin or Autorité) from 'users' table
         const { count: activeUsersAdmin } = await supabase
-          .from("profiles")
+          .from("users")
           .select("*", { count: "exact", head: true })
           .eq("role", "admin");
 
         const { count: activeUsersAutorite } = await supabase
-          .from("profiles")
+          .from("users")
           .select("*", { count: "exact", head: true })
           .eq("role", "Autorité");
         

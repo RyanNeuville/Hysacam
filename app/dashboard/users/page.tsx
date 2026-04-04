@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -37,10 +37,9 @@ interface UserProfile {
   id: string
   email: string
   role: 'admin' | 'citizen' | 'Autorité' | 'Citoyen' | string
-  statut: 'actif' | 'bloqué' | string
+  is_blocked: boolean
   created_at: string
-  nom?: string
-  full_name?: string
+  name?: string
 }
 
 export default function UsersPage() {
@@ -48,8 +47,8 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [search, setSearch] = useState('')
-  const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'citizen'>('all')
-  const [statutFilter, setStatutFilter] = useState<'all' | 'actif' | 'bloqué'>('all')
+  const [roleFilter, setRoleFilter] = useState<string>('all')
+  const [statutFilter, setStatutFilter] = useState<'all' | 'active' | 'blocked'>('all')
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
   const fetchUsers = async (isRefresh = false) => {
@@ -57,7 +56,7 @@ export default function UsersPage() {
     try {
       const supabase = createClient()
       const { data, error } = await supabase
-        .from('profiles')
+        .from('users')
         .select('*')
         .order('created_at', { ascending: false })
 
@@ -76,37 +75,41 @@ export default function UsersPage() {
 
     const supabase = createClient()
     const subscription = supabase
-      .channel('profiles_realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => fetchUsers())
+      .channel('users_realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => fetchUsers())
       .subscribe()
 
     return () => { subscription.unsubscribe() }
   }, [])
 
   const filteredUsers = users.filter((user) => {
-    const userName = user.nom || user.full_name || '';
+    const userName = user.name || '';
     const matchSearch =
       (user.email || '').toLowerCase().includes(search.toLowerCase()) ||
       userName.toLowerCase().includes(search.toLowerCase())
     const matchRole = roleFilter === 'all' || user.role === roleFilter
-    const matchStatut = statutFilter === 'all' || user.statut === statutFilter
+    
+    let matchStatut = true
+    if (statutFilter === 'active') matchStatut = !user.is_blocked
+    if (statutFilter === 'blocked') matchStatut = user.is_blocked
+    
     return matchSearch && matchRole && matchStatut
   })
 
-  const toggleUserStatut = async (userId: string, currentStatut: string) => {
+  const toggleUserBlock = async (userId: string, currentBlocked: boolean) => {
     setActionLoading(userId)
     try {
       const supabase = createClient()
-      const newStatut = currentStatut === 'actif' ? 'bloqué' : 'actif'
+      const newBlocked = !currentBlocked
       const { error } = await supabase
-        .from('profiles')
-        .update({ statut: newStatut })
+        .from('users')
+        .update({ is_blocked: newBlocked })
         .eq('id', userId)
 
       if (error) throw error
-      setUsers(users.map((u) => u.id === userId ? { ...u, statut: newStatut } : u))
+      setUsers(users.map((u) => u.id === userId ? { ...u, is_blocked: newBlocked } : u))
     } catch (error) {
-      console.error('Error updating user statut:', error)
+      console.error('Error updating user block status:', error)
     } finally {
       setActionLoading(null)
     }
@@ -117,7 +120,7 @@ export default function UsersPage() {
     try {
       const supabase = createClient()
       const { error } = await supabase
-        .from('profiles')
+        .from('users')
         .update({ role: newRole })
         .eq('id', userId)
 
@@ -130,7 +133,6 @@ export default function UsersPage() {
     }
   }
 
-  // Export CSV avec en-tête stylisée Hysacam
   const handleExportCSV = () => {
     const exportDate = new Date().toLocaleDateString('fr-FR', {
       day: '2-digit', month: 'long', year: 'numeric'
@@ -138,21 +140,18 @@ export default function UsersPage() {
     const exportTime = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
 
     const csvRows = [
-      // En-tête Hysacam
       [`HYSACAM - Rapport des Utilisateurs`],
       [`Généré le : ${exportDate} à ${exportTime}`],
       [`Plateforme : CityReport Admin Dashboard`],
       [`Nombre total d'utilisateurs exportés : ${filteredUsers.length}`],
       [],
-      // En-têtes colonnes
       ['ID', 'Email', 'Nom Complet', 'Rôle', 'Statut', 'Date d\'inscription'],
-      // Données
       ...filteredUsers.map((u) => [
         u.id,
         u.email || '-',
-        u.nom || u.full_name || '-',
-        u.role === 'admin' || u.role === 'Autorité' ? 'Administrateur' : u.role === 'citizen' || u.role === 'Citoyen' ? 'Citoyen' : u.role || '-',
-        u.statut === 'actif' ? 'Actif' : u.statut === 'bloqué' ? 'Bloqué' : u.statut || '-',
+        u.name || '-',
+        u.role || '-',
+        u.is_blocked ? 'Bloqué' : 'Actif',
         new Date(u.created_at).toLocaleDateString('fr-FR'),
       ]),
     ]
@@ -161,7 +160,7 @@ export default function UsersPage() {
       .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(';'))
       .join('\n')
 
-    const bom = '\uFEFF' // UTF-8 BOM pour Excel
+    const bom = '\uFEFF'
     const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
@@ -171,19 +170,17 @@ export default function UsersPage() {
     URL.revokeObjectURL(url)
   }
 
-  // Statistiques rapides
   const totalUsers = users.length
   const adminCount = users.filter((u) => u.role === 'admin' || u.role === 'Autorité').length
   const citizenCount = users.filter((u) => u.role === 'citizen' || u.role === 'Citoyen').length
-  const blockedCount = users.filter((u) => u.statut === 'bloqué').length
+  const blockedCount = users.filter((u) => u.is_blocked).length
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-1">Gestion des Utilisateurs</h1>
-          <p className="text-muted-foreground">Administrer les comptes admin et citoyens de la plateforme</p>
+          <p className="text-muted-foreground">Administrer les comptes réels de la plateforme</p>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -208,7 +205,6 @@ export default function UsersPage() {
         </div>
       </div>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Total utilisateurs', value: totalUsers, icon: Users, color: 'text-primary', bg: 'bg-primary/10' },
@@ -216,7 +212,7 @@ export default function UsersPage() {
           { label: 'Citoyens', value: citizenCount, icon: UserCheck, color: 'text-green-500', bg: 'bg-green-500/10' },
           { label: 'Bloqués', value: blockedCount, icon: UserX, color: 'text-red-500', bg: 'bg-red-500/10' },
         ].map((stat) => (
-          <Card key={stat.label} className="border border-border">
+          <Card key={stat.label} className="border border-border shadow-sm">
             <CardContent className="p-5 flex items-center justify-between">
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">{stat.label}</p>
@@ -232,7 +228,6 @@ export default function UsersPage() {
         ))}
       </div>
 
-      {/* Filtres */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -243,16 +238,15 @@ export default function UsersPage() {
             className="pl-9"
           />
         </div>
-        <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as any)}>
+        <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v)}>
           <SelectTrigger className="w-full sm:w-44">
             <SelectValue placeholder="Rôle" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tous les rôles</SelectItem>
-            <SelectItem value="admin">Administrateur (Legacy)</SelectItem>
-            <SelectItem value="Autorité">Autorité (HYSACAM)</SelectItem>
-            <SelectItem value="citizen">Citoyen (Legacy)</SelectItem>
-            <SelectItem value="Citoyen">Citoyen</SelectItem>
+            <SelectItem value="admin">Admin</SelectItem>
+            <SelectItem value="citizen">Citoyen</SelectItem>
+            <SelectItem value="Autorité">Autorité</SelectItem>
           </SelectContent>
         </Select>
         <Select value={statutFilter} onValueChange={(v) => setStatutFilter(v as any)}>
@@ -261,14 +255,13 @@ export default function UsersPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tous les statuts</SelectItem>
-            <SelectItem value="actif">Actif</SelectItem>
-            <SelectItem value="bloqué">Bloqué</SelectItem>
+            <SelectItem value="active">Actif</SelectItem>
+            <SelectItem value="blocked">Bloqué</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      {/* Tableau utilisateurs */}
-      <Card className="border border-border">
+      <Card className="border border-border overflow-hidden">
         <CardHeader>
           <CardTitle>Comptes utilisateurs</CardTitle>
           <CardDescription>
@@ -277,7 +270,7 @@ export default function UsersPage() {
               : `${filteredUsers.length} utilisateur${filteredUsers.length !== 1 ? 's' : ''} trouvé${filteredUsers.length !== 1 ? 's' : ''}`}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {loading ? (
             <div className="text-center py-12 text-muted-foreground">
               <Users className="w-10 h-10 mx-auto mb-3 opacity-30" />
@@ -292,32 +285,27 @@ export default function UsersPage() {
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-border">
+                  <TableRow className="bg-muted/50">
                     <TableHead>Utilisateur</TableHead>
                     <TableHead>Rôle</TableHead>
                     <TableHead>Statut</TableHead>
                     <TableHead>Inscription</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="text-right pr-6">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredUsers.map((user) => (
-                    <TableRow key={user.id} className="border-border hover:bg-muted/40 transition-colors">
+                    <TableRow key={user.id} className="hover:bg-muted/30 transition-colors border-b">
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center border border-primary/10">
                             <span className="text-primary font-bold text-sm">
-                              {(user.nom || user.full_name || user.email || '?')[0].toUpperCase()}
+                              {(user.name || user.email || '?')[0].toUpperCase()}
                             </span>
                           </div>
                           <div>
-                            {(user.nom || user.full_name) && (
-                              <p className="font-medium text-foreground text-sm">{user.nom || user.full_name}</p>
-                            )}
-                            <p className={`text-muted-foreground ${(user.nom || user.full_name) ? 'text-xs' : 'font-medium text-foreground text-sm'} flex items-center gap-1`}>
-                              <Mail className="w-3 h-3" />
-                              {user.email || 'Pas d\'email'}
-                            </p>
+                            <p className="font-semibold text-foreground text-sm">{user.name || 'Anonyme'}</p>
+                            <p className="text-muted-foreground text-xs">{user.email}</p>
                           </div>
                         </div>
                       </TableCell>
@@ -327,60 +315,44 @@ export default function UsersPage() {
                           onValueChange={(v) => changeUserRole(user.id, v)}
                           disabled={actionLoading === user.id + '_role'}
                         >
-                          <SelectTrigger className="w-36 h-8 text-xs">
+                          <SelectTrigger className="w-32 h-8 text-[11px] font-medium">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="admin">
-                              <div className="flex items-center gap-2">
-                                <ShieldCheck className="w-3 h-3 text-yellow-500" />
-                                Administrateur
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="citizen">
-                              <div className="flex items-center gap-2">
-                                <UserCheck className="w-3 h-3 text-green-500" />
-                                Citoyen
-                              </div>
-                            </SelectItem>
+                            <SelectItem value="admin">Admin</SelectItem>
+                            <SelectItem value="Autorité">Autorité</SelectItem>
+                            <SelectItem value="citizen">Citoyen</SelectItem>
                           </SelectContent>
                         </Select>
                       </TableCell>
                       <TableCell>
                         <Badge
-                          className={
-                            user.statut === 'actif'
-                              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                              : user.statut === 'bloqué'
-                              ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-                              : 'bg-gray-100 text-gray-800'
-                          }
+                          variant={user.is_blocked ? "destructive" : "secondary"}
+                          className="text-[10px] uppercase font-bold"
                         >
-                          {user.statut === 'actif' ? '● Actif' : user.statut === 'bloqué' ? '● Bloqué' : user.statut || 'Inconnu'}
+                          {user.is_blocked ? 'Bloqué' : 'Actif'}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {new Date(user.created_at).toLocaleDateString('fr-FR', {
-                          day: '2-digit', month: 'short', year: 'numeric'
-                        })}
+                      <TableCell className="text-xs text-muted-foreground">
+                        {new Date(user.created_at).toLocaleDateString('fr-FR')}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-right pr-6">
                         <Button
-                          variant={user.statut === 'actif' ? 'destructive' : 'default'}
+                          variant={user.is_blocked ? 'outline' : 'destructive'}
                           size="sm"
-                          onClick={() => toggleUserStatut(user.id, user.statut)}
+                          onClick={() => toggleUserBlock(user.id, user.is_blocked)}
                           disabled={actionLoading === user.id}
-                          className="flex items-center gap-2 text-xs"
+                          className="h-8 px-3 text-[11px] font-medium"
                         >
-                          {user.statut === 'actif' ? (
+                          {user.is_blocked ? (
                             <>
-                              <Ban className="w-3 h-3" />
-                              Bloquer
+                              <UserCheck className="w-3 h-3 mr-1.5" />
+                              Débloquer
                             </>
                           ) : (
                             <>
-                              <ShieldCheck className="w-3 h-3" />
-                              Débloquer
+                              <Ban className="w-3 h-3 mr-1.5" />
+                              Bloquer
                             </>
                           )}
                         </Button>

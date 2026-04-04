@@ -30,7 +30,8 @@ interface Report {
   statut: "En attente" | "En cours" | "Résolu";
   created_at: string;
   user_id: string;
-  imageUrl: string;
+  imageUrl: string | null;
+  photo_url?: string | null;
   latitude: number;
   longitude: number;
 }
@@ -42,9 +43,8 @@ interface Comment {
   content: string;
   is_admin: boolean;
   created_at: string;
-  profiles?: {
-    nom: string | null;
-    full_name: string | null;
+  users?: {
+    name: string | null;
   }
 }
 
@@ -79,7 +79,7 @@ export default function ReportDetailsPage() {
           .from("comments")
           .select(`
             *,
-            profiles:user_id (nom, full_name)
+            users:user_id (name)
           `)
           .eq("report_id", reportId)
           .order("created_at", { ascending: true });
@@ -193,8 +193,10 @@ export default function ReportDetailsPage() {
           <ArrowLeft className="w-4 h-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Détail du Signalement</h1>
-          <p className="text-muted-foreground">ID: {report.id}</p>
+          <h1 className="text-2xl font-bold text-foreground">
+            {report.title || "Détail du Signalement"}
+          </h1>
+          <p className="text-muted-foreground">Type: {report.typeInsalubrite}</p>
         </div>
       </div>
 
@@ -211,9 +213,13 @@ export default function ReportDetailsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {report.imageUrl && (
-                <div className="rounded-xl overflow-hidden shadow-sm">
-                  <img src={report.imageUrl} alt="Preuve" className="w-full h-48 object-cover" />
+              {(report.imageUrl || report.photo_url) && (
+                <div className="rounded-xl overflow-hidden shadow-sm aspect-video bg-muted flex items-center justify-center">
+                  {(report.imageUrl || report.photo_url) ? (
+                    <img src={report.imageUrl || report.photo_url || ""} alt="Preuve" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="text-muted-foreground text-xs">Aucune image disponible</div>
+                  )}
                 </div>
               )}
               
@@ -294,7 +300,7 @@ export default function ReportDetailsPage() {
                     >
                       {comment.is_admin 
                         ? "HYSACAM (Admin)" 
-                        : (comment.profiles?.nom || comment.profiles?.full_name || "Citoyen")} •{" "}
+                        : (comment.users?.name || "Citoyen")} •{" "}
                       {new Date(comment.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
