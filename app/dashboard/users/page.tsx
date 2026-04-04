@@ -16,6 +16,7 @@ import {
   UserX,
   Search,
   RefreshCw,
+  Trash2,
 } from 'lucide-react'
 import {
   Table,
@@ -110,6 +111,25 @@ export default function UsersPage() {
       setUsers(users.map((u) => u.id === userId ? { ...u, is_blocked: newBlocked } : u))
     } catch (error) {
       console.error('Error updating user block status:', error)
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const deleteUser = async (userId: string) => {
+    if (!confirm('Voulez-vous vraiment supprimer cet utilisateur ?')) return
+    setActionLoading(userId + '_delete')
+    try {
+      const supabase = createClient()
+      const { error } = await supabase
+        .from('users')
+        .delete()
+        .eq('id', userId)
+
+      if (error) throw error
+      setUsers(users.filter((u) => u.id !== userId))
+    } catch (error) {
+      console.error('Error deleting user:', error)
     } finally {
       setActionLoading(null)
     }
@@ -355,6 +375,15 @@ export default function UsersPage() {
                               Bloquer
                             </>
                           )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => deleteUser(user.id)}
+                          disabled={actionLoading === user.id + '_delete'}
+                          className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </Button>
                       </TableCell>
                     </TableRow>

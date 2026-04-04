@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Clock, MapPin, Send, User } from "lucide-react";
+import { ArrowLeft, Clock, MapPin, Send, User, X } from "lucide-react";
 
 interface Report {
   id: string;
@@ -132,6 +132,22 @@ export default function ReportDetailsPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [comments]);
+
+  const deleteReport = async () => {
+    if (!confirm("Voulez-vous vraiment supprimer ce rapport ?")) return;
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("reports")
+        .delete()
+        .eq("id", reportId);
+
+      if (error) throw error;
+      router.push("/dashboard/reports");
+    } catch (error) {
+      console.error("Error deleting report:", error);
+    }
+  };
 
   const updateStatus = async (newStatus: string) => {
     try {
@@ -253,6 +269,12 @@ export default function ReportDetailsPage() {
                     <SelectItem value="Résolu">Résolu</SelectItem>
                   </SelectContent>
                 </Select>
+                <div className="pt-6 border-t border-border">
+                  <Button variant="destructive" className="w-full gap-2" onClick={deleteReport}>
+                    <X className="w-4 h-4" />
+                    Supprimer le rapport
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
