@@ -112,8 +112,21 @@ export default function NotificationsPage() {
     }
   };
 
-  const deleteNotification = (notificationId: string) => {
-    setNotifications(notifications.filter((n) => n.id !== notificationId));
+  const deleteNotification = async (notificationId: string) => {
+    if (!confirm("Supprimer définitivement cette notification ?")) return;
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("notifications")
+        .delete()
+        .eq("id", notificationId);
+
+      if (!error) {
+        setNotifications(notifications.filter((n) => n.id !== notificationId));
+      }
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+    }
   };
 
   const typeIcon = {
@@ -187,7 +200,7 @@ export default function NotificationsPage() {
                         : "bg-primary/5 border-primary/20"
                     }`}
                   >
-                    <Icon className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+                    <Icon className="w-5 h-5 text-primary mt-1 shrink-0" />
                     <div className="flex-1">
                       <div className="flex items-start justify-between gap-2">
                         <div>

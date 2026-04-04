@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Clock, MapPin, Send, User } from "lucide-react";
+import { ArrowLeft, Clock, MapPin, Send, User, X } from "lucide-react";
 
 interface Report {
   id: string;
@@ -30,7 +30,8 @@ interface Report {
   statut: "En attente" | "En cours" | "Résolu";
   created_at: string;
   user_id: string;
-  imageUrl: string;
+  imageUrl: string | null;
+  photo_url?: string | null;
   latitude: number;
   longitude: number;
 }
@@ -42,6 +43,9 @@ interface Comment {
   content: string;
   is_admin: boolean;
   created_at: string;
+  users?: {
+    name: string | null;
+  }
 }
 
 export default function ReportDetailsPage() {
@@ -70,17 +74,20 @@ export default function ReportDetailsPage() {
         if (reportError) throw reportError;
         setReport(reportData);
 
-        // Fetch comments
+        // Fetch comments with author profile
         const { data: commentsData, error: commentsError } = await supabase
           .from("comments")
-          .select("*")
+          .select(`
+            *,
+            users:user_id (name)
+          `)
           .eq("report_id", reportId)
           .order("created_at", { ascending: true });
 
         if (commentsError) throw commentsError;
         setComments(commentsData || []);
-      } catch (error) {
-        console.error("Error fetching data:", error);
+      } catch (error: any) {
+        console.error("Error fetching data:", JSON.stringify(error, null, 2));
       } finally {
         setLoading(false);
       }
@@ -125,6 +132,22 @@ export default function ReportDetailsPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [comments]);
+
+  const deleteReport = async () => {
+    if (!confirm("Voulez-vous vraiment supprimer ce rapport ?")) return;
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("reports")
+        .delete()
+        .eq("id", reportId);
+
+      if (error) throw error;
+      router.push("/dashboard/reports");
+    } catch (error) {
+      console.error("Error deleting report:", error);
+    }
+  };
 
   const updateStatus = async (newStatus: string) => {
     try {
@@ -186,8 +209,10 @@ export default function ReportDetailsPage() {
           <ArrowLeft className="w-4 h-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Détail du Signalement</h1>
-          <p className="text-muted-foreground">ID: {report.id}</p>
+          <h1 className="text-2xl font-bold text-foreground">
+            {report.title || "Détail du Signalement"}
+          </h1>
+          <p className="text-muted-foreground">Type: {report.typeInsalubrite}</p>
         </div>
       </div>
 
@@ -204,9 +229,13 @@ export default function ReportDetailsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {report.imageUrl && (
-                <div className="rounded-xl overflow-hidden shadow-sm">
-                  <img src={report.imageUrl} alt="Preuve" className="w-full h-48 object-cover" />
+              {(report.imageUrl || report.photo_url) && (
+                <div className="rounded-xl overflow-hidden shadow-sm aspect-video bg-muted flex items-center justify-center">
+                  {(report.imageUrl || report.photo_url) ? (
+                    <img src={report.imageUrl || report.photo_url || ""} alt="Preuve" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="text-muted-foreground text-xs">Aucune image disponible</div>
+                  )}
                 </div>
               )}
               
@@ -240,6 +269,12 @@ export default function ReportDetailsPage() {
                     <SelectItem value="Résolu">Résolu</SelectItem>
                   </SelectContent>
                 </Select>
+                <div className="pt-6 border-t border-border">
+                  <Button variant="destructive" className="w-full gap-2" onClick={deleteReport}>
+                    <X className="w-4 h-4" />
+                    Supprimer le rapport
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -285,7 +320,9 @@ export default function ReportDetailsPage() {
                         comment.is_admin ? "text-right" : "text-left"
                       }`}
                     >
-                      {comment.is_admin ? "Vous (Admin HYSACAM)" : "Citoyen"} •{" "}
+                      {comment.is_admin 
+                        ? "HYSACAM (Admin)" 
+                        : (comment.users?.name || "Citoyen")} •{" "}
                       {new Date(comment.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
