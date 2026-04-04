@@ -42,6 +42,10 @@ interface Comment {
   content: string;
   is_admin: boolean;
   created_at: string;
+  profiles?: {
+    nom: string | null;
+    full_name: string | null;
+  }
 }
 
 export default function ReportDetailsPage() {
@@ -70,10 +74,13 @@ export default function ReportDetailsPage() {
         if (reportError) throw reportError;
         setReport(reportData);
 
-        // Fetch comments
+        // Fetch comments with author profile
         const { data: commentsData, error: commentsError } = await supabase
           .from("comments")
-          .select("*")
+          .select(`
+            *,
+            profiles:user_id (nom, full_name)
+          `)
           .eq("report_id", reportId)
           .order("created_at", { ascending: true });
 
@@ -285,7 +292,9 @@ export default function ReportDetailsPage() {
                         comment.is_admin ? "text-right" : "text-left"
                       }`}
                     >
-                      {comment.is_admin ? "Vous (Admin HYSACAM)" : "Citoyen"} •{" "}
+                      {comment.is_admin 
+                        ? "HYSACAM (Admin)" 
+                        : (comment.profiles?.nom || comment.profiles?.full_name || "Citoyen")} •{" "}
                       {new Date(comment.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>

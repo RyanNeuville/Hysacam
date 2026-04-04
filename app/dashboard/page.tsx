@@ -53,11 +53,18 @@ export default function DashboardPage() {
           .select("*", { count: "exact", head: true })
           .eq("statut", "Résolu");
 
-        // Fetch active users
-        const { count: activeUsers } = await supabase
+        // Fetch active users (Admin or Autorité)
+        const { count: activeUsersAdmin } = await supabase
           .from("profiles")
           .select("*", { count: "exact", head: true })
           .eq("role", "admin");
+
+        const { count: activeUsersAutorite } = await supabase
+          .from("profiles")
+          .select("*", { count: "exact", head: true })
+          .eq("role", "Autorité");
+        
+        const activeUsersCount = (activeUsersAdmin || 0) + (activeUsersAutorite || 0);
 
         const { count: inProgressReports } = await supabase
           .from("reports")
@@ -86,7 +93,7 @@ export default function DashboardPage() {
           pendingReports: pendingReports || 0,
           inProgressReports: inProgressReports || 0,
           resolvedReports: resolvedReports || 0,
-          activeUsers: activeUsers || 0,
+          activeUsers: activeUsersCount,
         });
       } catch (error) {
         console.error("Error fetching stats:", error);

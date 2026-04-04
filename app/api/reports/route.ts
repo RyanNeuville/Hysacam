@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const status = searchParams.get('status')
+    const statut = searchParams.get('statut')
     const limit = searchParams.get('limit') || '50'
 
     let query = supabase
@@ -20,8 +20,8 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(parseInt(limit))
 
-    if (status && status !== 'all') {
-      query = query.eq('status', status)
+    if (statut && statut !== 'all') {
+      query = query.eq('statut', statut)
     }
 
     const { data, error } = await query
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
           longitude,
           image_url,
           user_id: user.id,
-          status: 'pending',
+          statut: 'En attente',
         },
       ])
       .select()

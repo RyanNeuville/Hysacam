@@ -36,9 +36,10 @@ import {
 interface UserProfile {
   id: string
   email: string
-  role: 'admin' | 'citizen' | string
+  role: 'admin' | 'citizen' | 'Autorité' | 'Citoyen' | string
   statut: 'actif' | 'bloqué' | string
   created_at: string
+  nom?: string
   full_name?: string
 }
 
@@ -83,9 +84,10 @@ export default function UsersPage() {
   }, [])
 
   const filteredUsers = users.filter((user) => {
+    const userName = user.nom || user.full_name || '';
     const matchSearch =
       (user.email || '').toLowerCase().includes(search.toLowerCase()) ||
-      (user.full_name || '').toLowerCase().includes(search.toLowerCase())
+      userName.toLowerCase().includes(search.toLowerCase())
     const matchRole = roleFilter === 'all' || user.role === roleFilter
     const matchStatut = statutFilter === 'all' || user.statut === statutFilter
     return matchSearch && matchRole && matchStatut
@@ -148,8 +150,8 @@ export default function UsersPage() {
       ...filteredUsers.map((u) => [
         u.id,
         u.email || '-',
-        u.full_name || '-',
-        u.role === 'admin' ? 'Administrateur' : u.role === 'citizen' ? 'Citoyen' : u.role || '-',
+        u.nom || u.full_name || '-',
+        u.role === 'admin' || u.role === 'Autorité' ? 'Administrateur' : u.role === 'citizen' || u.role === 'Citoyen' ? 'Citoyen' : u.role || '-',
         u.statut === 'actif' ? 'Actif' : u.statut === 'bloqué' ? 'Bloqué' : u.statut || '-',
         new Date(u.created_at).toLocaleDateString('fr-FR'),
       ]),
@@ -171,8 +173,8 @@ export default function UsersPage() {
 
   // Statistiques rapides
   const totalUsers = users.length
-  const adminCount = users.filter((u) => u.role === 'admin').length
-  const citizenCount = users.filter((u) => u.role === 'citizen').length
+  const adminCount = users.filter((u) => u.role === 'admin' || u.role === 'Autorité').length
+  const citizenCount = users.filter((u) => u.role === 'citizen' || u.role === 'Citoyen').length
   const blockedCount = users.filter((u) => u.statut === 'bloqué').length
 
   return (
@@ -247,8 +249,10 @@ export default function UsersPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tous les rôles</SelectItem>
-            <SelectItem value="admin">Administrateur</SelectItem>
-            <SelectItem value="citizen">Citoyen</SelectItem>
+            <SelectItem value="admin">Administrateur (Legacy)</SelectItem>
+            <SelectItem value="Autorité">Autorité (HYSACAM)</SelectItem>
+            <SelectItem value="citizen">Citoyen (Legacy)</SelectItem>
+            <SelectItem value="Citoyen">Citoyen</SelectItem>
           </SelectContent>
         </Select>
         <Select value={statutFilter} onValueChange={(v) => setStatutFilter(v as any)}>
@@ -303,14 +307,14 @@ export default function UsersPage() {
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                             <span className="text-primary font-bold text-sm">
-                              {(user.full_name || user.email || '?')[0].toUpperCase()}
+                              {(user.nom || user.full_name || user.email || '?')[0].toUpperCase()}
                             </span>
                           </div>
                           <div>
-                            {user.full_name && (
-                              <p className="font-medium text-foreground text-sm">{user.full_name}</p>
+                            {(user.nom || user.full_name) && (
+                              <p className="font-medium text-foreground text-sm">{user.nom || user.full_name}</p>
                             )}
-                            <p className={`text-muted-foreground ${user.full_name ? 'text-xs' : 'font-medium text-foreground text-sm'} flex items-center gap-1`}>
+                            <p className={`text-muted-foreground ${(user.nom || user.full_name) ? 'text-xs' : 'font-medium text-foreground text-sm'} flex items-center gap-1`}>
                               <Mail className="w-3 h-3" />
                               {user.email || 'Pas d\'email'}
                             </p>

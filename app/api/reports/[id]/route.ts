@@ -47,11 +47,11 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { status, title, description } = body
+    const { statut, title, description } = body
 
     const { data, error } = await supabase
       .from('reports')
-      .update({ status, title, description })
+      .update({ statut, title, description })
       .eq('id', id)
       .select()
       .single()
