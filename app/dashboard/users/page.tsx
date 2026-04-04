@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Mail,
   ShieldCheck,
@@ -17,6 +18,8 @@ import {
   Search,
   RefreshCw,
   Trash2,
+  Bell,
+  Send,
 } from 'lucide-react'
 import {
   Table,
@@ -33,6 +36,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
 interface UserProfile {
   id: string
@@ -51,6 +63,13 @@ export default function UsersPage() {
   const [roleFilter, setRoleFilter] = useState<string>('all')
   const [statutFilter, setStatutFilter] = useState<'all' | 'active' | 'blocked'>('all')
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  
+  // Notification state
+  const [isNotifyOpen, setIsNotifyOpen] = useState(false)
+  const [notifyUser, setNotifyUser] = useState<UserProfile | null>(null)
+  const [notifyTitle, setNotifyTitle] = useState('')
+  const [notifyMessage, setNotifyMessage] = useState('')
+  const [notifyLoading, setNotifyLoading] = useState(false)
 
   const fetchUsers = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true)
@@ -150,6 +169,34 @@ export default function UsersPage() {
       console.error('Error updating user role:', error)
     } finally {
       setActionLoading(null)
+    }
+  }
+
+  const handleSendNotification = async () => {
+    if (!notifyUser || !notifyTitle || !notifyMessage) return
+    setNotifyLoading(true)
+    try {
+      const supabase = createClient()
+      const { error } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: notifyUser.id,
+          title: notifyTitle,
+          message: notifyMessage,
+          type: 'info',
+          read: false
+        })
+
+      if (error) throw error
+      setIsNotifyOpen(false)
+      setNotifyTitle('')
+      setNotifyMessage('')
+      alert('Notification envoyée avec succès !')
+    } catch (error) {
+      console.error('Error sending notification:', error)
+      alert('Erreur lors de l’envoi.')
+    } finally {
+      setNotifyLoading(false)
     }
   }
 
@@ -357,34 +404,48 @@ export default function UsersPage() {
                         {new Date(user.created_at).toLocaleDateString('fr-FR')}
                       </TableCell>
                       <TableCell className="text-right pr-6">
-                        <Button
-                          variant={user.is_blocked ? 'outline' : 'destructive'}
-                          size="sm"
-                          onClick={() => toggleUserBlock(user.id, user.is_blocked)}
-                          disabled={actionLoading === user.id}
-                          className="h-8 px-3 text-[11px] font-medium"
-                        >
-                          {user.is_blocked ? (
-                            <>
-                              <UserCheck className="w-3 h-3 mr-1.5" />
-                              Débloquer
-                            </>
-                          ) : (
-                            <>
-                              <Ban className="w-3 h-3 mr-1.5" />
-                              Bloquer
-                            </>
-                          )}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deleteUser(user.id)}
-                          disabled={actionLoading === user.id + '_delete'}
-                          className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <div className="flex items-center justify-end gap-2">
+                           <Button
+                            variant="ghost"
+                            size="sm"
+                            title="Envoyer une notification"
+                            onClick={() => {
+                              setNotifyUser(user);
+                              setIsNotifyOpen(true);
+                            }}
+                            className="h-8 w-8 p-0 text-primary hover:bg-primary/10"
+                          >
+                            <Bell className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant={user.is_blocked ? 'outline' : 'destructive'}
+                            size="sm"
+                            onClick={() => toggleUserBlock(user.id, user.is_blocked)}
+                            disabled={actionLoading === user.id}
+                            className="h-8 px-3 text-[11px] font-medium"
+                          >
+                            {user.is_blocked ? (
+                              <>
+                                <UserCheck className="w-3 h-3 mr-1.5" />
+                                Débloquer
+                              </>
+                            ) : (
+                              <>
+                                <Ban className="w-3 h-3 mr-1.5" />
+                                Bloquer
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deleteUser(user.id)}
+                            disabled={actionLoading === user.id + '_delete'}
+                            className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -394,6 +455,51 @@ export default function UsersPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Manual Notification Dialog */}
+      <Dialog open={isNotifyOpen} onOpenChange={setIsNotifyOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Bell className="w-5 h-5 text-primary" />
+              Envoyer une Notification
+            </DialogTitle>
+            <DialogDescription>
+              Le message sera envoyé directement au citoyen **{notifyUser?.name}**.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Titre</label>
+              <Input 
+                placeholder="Ex: Mise à jour de votre compte" 
+                value={notifyTitle}
+                onChange={(e) => setNotifyTitle(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Message</label>
+              <Textarea 
+                placeholder="Écrivez votre message ici..." 
+                className="min-h-[100px]"
+                value={notifyMessage}
+                onChange={(e) => setNotifyMessage(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsNotifyOpen(false)}>Annuler</Button>
+            <Button 
+              onClick={handleSendNotification} 
+              disabled={notifyLoading || !notifyTitle || !notifyMessage}
+              className="gap-2"
+            >
+              <Send className={`w-4 h-4 ${notifyLoading ? 'animate-spin' : ''}`} />
+              Envoyer maintenant
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
