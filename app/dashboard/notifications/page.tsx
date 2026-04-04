@@ -200,7 +200,7 @@ export default function NotificationsPage() {
                         : "bg-primary/5 border-primary/20"
                     }`}
                   >
-                    <Icon className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+                    <Icon className="w-5 h-5 text-primary mt-1 shrink-0" />
                     <div className="flex-1">
                       <div className="flex items-start justify-between gap-2">
                         <div>

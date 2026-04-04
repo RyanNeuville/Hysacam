@@ -20,7 +20,9 @@ import {
   Trash2,
   Bell,
   Send,
+  Eye,
 } from 'lucide-react'
+import { UserProfileModal } from '@/components/user-profile-modal'
 import {
   Table,
   TableBody,
@@ -70,6 +72,10 @@ export default function UsersPage() {
   const [notifyTitle, setNotifyTitle] = useState('')
   const [notifyMessage, setNotifyMessage] = useState('')
   const [notifyLoading, setNotifyLoading] = useState(false)
+  
+  // Profile state
+  const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null)
 
   const fetchUsers = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true)
@@ -403,9 +409,21 @@ export default function UsersPage() {
                       <TableCell className="text-xs text-muted-foreground">
                         {new Date(user.created_at).toLocaleDateString('fr-FR')}
                       </TableCell>
-                      <TableCell className="text-right pr-6">
+                       <TableCell className="text-right pr-6">
                         <div className="flex items-center justify-end gap-2">
-                           <Button
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50"
+                            title="Voir Profil Éco-Citoyen"
+                            onClick={() => {
+                              setSelectedUser(user)
+                              setIsProfileOpen(true)
+                            }}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
                             variant="ghost"
                             size="sm"
                             title="Envoyer une notification"
@@ -500,6 +518,16 @@ export default function UsersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* User Profile Modal */}
+      {selectedUser && (
+        <UserProfileModal
+          userId={selectedUser.id}
+          userName={selectedUser.name || selectedUser.email.split('@')[0]}
+          userEmail={selectedUser.email}
+          isOpen={isProfileOpen}
+          onClose={() => setIsProfileOpen(false)}
+        />
+      )}
     </div>
   )
 }
